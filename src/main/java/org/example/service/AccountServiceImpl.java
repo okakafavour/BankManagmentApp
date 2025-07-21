@@ -39,18 +39,29 @@ public class AccountServiceImpl implements AccountService{
     }
 
     @Override
-    public TransferResponse transfer(TransferRequest transferRequest) {
-       try{
-           TransferResult result = accountMapper.mapToTransfer(transferRequest);
-           return accountMapper.mapToTransferResponse(result.getSender(), result.getRecipient());
-       } catch (Exception e) {
-           TransferResponse transferResponse = new TransferResponse();
-           transferResponse.setStatus("FAILED");
-           transferResponse.setMessage("Transfer Failed");
-           transferResponse.setTimestamp(LocalDateTime.now());
-           return transferResponse;
-       }
+    public TransferResponse transfer(TransferRequest request) {
+        Account sender = accountRepository.findByAccountNumber(request.getSenderAccountNumber())
+                .orElseThrow(() -> new RuntimeException("Sender account not found with account number: " + request.getSenderAccountNumber()));
+
+        Account receiver = accountRepository.findByAccountNumber(request.getReceiverAccountNumber())
+                .orElseThrow(() -> new RuntimeException("Receiver account not found with account number: " + request.getReceiverAccountNumber()));
+
+        if (sender.getBalance() < request.getAmount()) {
+            throw new RuntimeException("Insufficient balance. Sender has: " + sender.getBalance() + ", required: " + request.getAmount());
+        }
+
+        sender.setBalance(sender.getBalance() - request.getAmount());
+        receiver.setBalance(receiver.getBalance() + request.getAmount());
+
+        accountRepository.save(sender);
+        accountRepository.save(receiver);
+
+        return accountMapper.mapToTransferResponse(sender, receiver, request.getAmount());
     }
+
+
+
+
 
     @Override
     public double balance(double amount) {

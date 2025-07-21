@@ -5,4 +5,5 @@ import org.example.data.model.User;
 
 @Data
 public class RegisterRequest extends User {
+
 }

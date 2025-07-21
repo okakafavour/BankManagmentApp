@@ -26,5 +26,6 @@ public class User {
     private boolean isVerified = false;
     private String verificationToken;
     private LocalDateTime tokenExpiryDate;
+    private String transferPin;
 
 }

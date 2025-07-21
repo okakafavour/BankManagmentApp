@@ -73,14 +73,14 @@ public class UserServiceImpl implements UserService {
         return true;
     }
 
-    public static RegisterRequest ValidateRegisterRequest(RegisterRequest request) {
+    public static void ValidateRegisterRequest(RegisterRequest request) {
         request.setFirstName(validateName(request.getFirstName()));
         request.setLastName(validateName(request.getLastName()));
         request.setMiddleName(validateName(request.getMiddleName()));
         request.setEmail(validateEmail(request.getEmail()));
         request.setPassword(PasswordHashingMapper.hashPassword(request.getPassword()));
         request.setPhoneNumber(validatePhoneNumber(request.getPhoneNumber()));
-        return request;
+        request.setTransferPin(validateTransferPin(request.getTransferPin()));
     }
 }
 

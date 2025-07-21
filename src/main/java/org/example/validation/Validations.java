@@ -3,6 +3,7 @@ package org.example.validation;
 import org.example.exception.EmailException;
 import org.example.exception.InvalidNameException;
 import org.example.exception.InvalidPhoneNumberException;
+import org.example.exception.InvalidPinException;
 
 public class Validations {
 
@@ -22,6 +23,11 @@ public class Validations {
     public static String validateName(String name) {
         if (name == null || !name.matches("^[a-zA-Z][a-zA-Z' -]{1,29}$")) throw new InvalidNameException("Invalid name format");
         return name;
+    }
+
+    public static String validateTransferPin(String transferPin) {
+        if (transferPin == null || !transferPin.matches("\\d{4}")) throw new InvalidPinException("Transfer pin must be exactly 4 digit pin");
+        return transferPin;
     }
 
 }

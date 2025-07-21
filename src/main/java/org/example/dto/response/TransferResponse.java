@@ -6,13 +6,13 @@ import java.time.LocalDateTime;
 
 @Data
 public class TransferResponse {
-    private String transactionId;
-    private String status;
-    private String message;
     private String senderAccountNumber;
-    private String recipientAccountNumber;
-    private double amount;
-    private double balance;
+    private String receiverAccountNumber;
+    private double amountTransferred;
+    private String message;
     private LocalDateTime timestamp;
-}
+    private double balance;
+    private double amount;
+    private String status;
 
+}
