@@ -1,4 +1,8 @@
 package org.example.dto.request;
 
-public class RegisterRequest {
+import lombok.Data;
+import org.example.data.model.User;
+
+@Data
+public class RegisterRequest extends User {
 }

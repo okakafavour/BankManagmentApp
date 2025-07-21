@@ -1,61 +1,30 @@
 package org.example.data.model;
 
+import lombok.Data;
+import org.example.enums.AccountType;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-public abstract class User {
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Data
+@Document("Bank User")
+public class User {
+
     @Id
     private String id;
+
     private String firstName;
+    private String lastName;
     private String middleName;
     private String email;
     private String password;
     private String phoneNumber;
+    private List<Account> accounts;
+    private AccountType accountType;
+    private boolean isVerified = false;
+    private String verificationToken;
+    private LocalDateTime tokenExpiryDate;
 
-    public User(String firstName, String middleName, String lastName, String email, String password, String phoneNumber) {
-        this.firstName = firstName;
-        this.middleName = middleName;
-        this.email = email;
-        this.password = password;
-        this.phoneNumber = phoneNumber;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getMiddleName() {
-        return middleName;
-    }
-
-    public void setMiddleName(String middleName) {
-        this.middleName = middleName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
 }

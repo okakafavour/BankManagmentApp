@@ -1,0 +1,12 @@
+package org.example.data.repository;
+
+import org.example.data.model.User;
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+import java.util.Optional;
+
+public interface UserRepository extends MongoRepository<User,String> {
+    boolean existsByEmail(String email);
+    Optional<User> findByVerificationToken(String token);
+    Optional<User>  findByEmail(String mail);
+}
