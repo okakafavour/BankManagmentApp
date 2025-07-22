@@ -2,6 +2,7 @@ package org.example.util;
 
 import org.example.data.model.Account;
 import org.example.data.model.User;
+import org.example.data.repository.AccountRepository;
 import org.example.data.repository.UserRepository;
 import org.example.dto.request.RegisterRequest;
 import org.example.dto.response.RegisterResponse;
@@ -28,13 +29,17 @@ public class UserMapper {
 
     @Autowired
     EmailServiceImpl  emailService;
+
+    @Autowired
+    AccountRepository accountRepository;
+
     public User mapToRegisterRequest(RegisterRequest registerRequest) {
         User user = createUser(registerRequest);
         Account account = createAccount(registerRequest);
 
-        List<Account> accounts = new ArrayList<>();
-        accounts.add(account);
-        user.setAccounts(accounts);
+        Account savedAccount = accountRepository.save(account);
+
+        user.setAccountIds(List.of(savedAccount.getId()));
 
         generateVerificationToken(user);
         userRepository.save(user);
@@ -43,9 +48,10 @@ public class UserMapper {
         return user;
     }
 
+
     public RegisterResponse mapToRegisterResponse(User user) {
         RegisterResponse registerResponse = new RegisterResponse();
-        registerResponse.setUserId(user.getId());
+        registerResponse.setUserId(user.getUserId());
         registerResponse.setMessage("Registration successful. check your email to confirm");
         return registerResponse;
     }

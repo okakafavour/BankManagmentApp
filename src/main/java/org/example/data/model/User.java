@@ -13,7 +13,7 @@ import java.util.List;
 public class User {
 
     @Id
-    private String id;
+    private String userId;
 
     private String firstName;
     private String lastName;
@@ -21,11 +21,15 @@ public class User {
     private String email;
     private String password;
     private String phoneNumber;
-    private List<Account> accounts;
+
+    // ✅ Store account IDs instead of full objects
+    private List<String> accountIds;
+
     private AccountType accountType;
     private boolean isVerified = false;
     private String verificationToken;
     private LocalDateTime tokenExpiryDate;
-    private String transferPin;
+    private String pin;
+
 
 }

@@ -56,7 +56,7 @@ public class UserServiceImpl implements UserService {
         LoginResponse response = new LoginResponse();
         response.setToken(token);
         response.setMessage("Login Successfully");
-        response.setUserId(loginRequest.getId());
+        response.setUserId(loginRequest.getUserId());
         return response;
     }
 
@@ -80,7 +80,7 @@ public class UserServiceImpl implements UserService {
         request.setEmail(validateEmail(request.getEmail()));
         request.setPassword(PasswordHashingMapper.hashPassword(request.getPassword()));
         request.setPhoneNumber(validatePhoneNumber(request.getPhoneNumber()));
-        request.setTransferPin(validateTransferPin(request.getTransferPin()));
+        request.setPin(validateTransferPin(request.getPin()));
     }
 }
 

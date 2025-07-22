@@ -1,32 +1,37 @@
 package org.example.service;
 
 import org.example.data.model.Account;
+import org.example.data.model.Transactions;
 import org.example.data.model.TransferResult;
+import org.example.data.model.User;
 import org.example.data.repository.AccountRepository;
+import org.example.data.repository.TransactionsRepository;
 import org.example.data.repository.UserRepository;
 import org.example.dto.request.TransferRequest;
 import org.example.dto.response.TransferResponse;
-import org.example.exception.AccountBalanceException;
-import org.example.exception.WrongAccountTypeException;
+import org.example.exception.*;
 import org.example.util.AccountMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.security.auth.login.AccountNotFoundException;
-import java.time.LocalDateTime;
+
+import java.util.List;
 import java.util.Random;
 
 @Service
 public class AccountServiceImpl implements AccountService{
 
     private Random random;
-    private double balance = 0.0;
 
     @Autowired
     AccountRepository accountRepository;
 
     @Autowired
     AccountMapper accountMapper;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private TransactionsRepository transactionsRepository;
 
     @Override
     public String generateAccountNumber() {
@@ -59,14 +64,71 @@ public class AccountServiceImpl implements AccountService{
         return accountMapper.mapToTransferResponse(sender, receiver, request.getAmount());
     }
 
+    @Override
+    public void withdraw(String userId, double amount, String pin) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
+        if (!user.getPin().equals(pin)) {
+            throw new InvalidPinException("Pin is not correct");
+        }
 
+        String accountId = user.getAccountIds().get(0);
 
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        if (account.getBalance() < amount) {
+            throw new RuntimeException("Insufficient funds");
+        }
+
+        account.setBalance(account.getBalance() - amount);
+        accountRepository.save(account);
+    }
 
     @Override
-    public double balance(double amount) {
-        this.balance += amount;
-        return balance;
+    public void deposit(String userId, double amount, String pin) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
+        if(!user.getPin().equals(pin)) throw new RuntimeException("pin is not correct");
+
+        String accountId = user.getAccountIds().get(0);
+
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+
+        account.setBalance(account.getBalance() + amount);
+        accountRepository.save(account);
     }
+
+    @Override
+    public List<TransactionsSummary> viewTransactionHistory(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        String accountId = user.getAccountIds().get(0);
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+
+        String accountNumber = account.getAccountNumber();
+
+        List<Transactions> transactions = transactionsRepository.findBySenderAccountOrRecipientAccountOrReceiverAccount(accountNumber, accountNumber, accountNumber);
+        return transactions.stream()
+                .sort
+    }
+
+    public List<Transactions> viewTransactions(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        String accountId = user.getAccountIds().get(0);
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+
+        String accountNumber = account.getAccountNumber();
+        return transactionsRepository.findBySenderAccountOrRecipientAccountOrReceiverAccount(accountNumber, accountNumber, accountNumber);
+    }
+
+
 }

@@ -1,7 +1,9 @@
 package org.example.service;
 
 import org.example.data.model.Account;
+import org.example.data.model.User;
 import org.example.data.repository.AccountRepository;
+import org.example.data.repository.UserRepository;
 import org.example.dto.request.TransferRequest;
 import org.example.dto.response.TransferResponse;
 import org.example.enums.AccountType;
@@ -20,14 +22,18 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AccountServiceImplTest {
 
     @Autowired
-    private AccountRepository accountRepository;
+    AccountRepository accountRepository;
 
     @Autowired
-    private AccountServiceImpl accountService;
+    AccountServiceImpl accountService;
+
+    @Autowired
+    UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
         accountRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test
@@ -75,4 +81,85 @@ public class AccountServiceImplTest {
         assertEquals(4000.0, updatedSender.getBalance());
         assertEquals(3000.0, updatedReceiver.getBalance());
     }
+
+    @Test
+    public void testToWithdraw() {
+        Account account = new Account();
+        account.setAccountNumber("0712345688");
+        account.setBalance(5000.00);
+        account.setAccountType(AccountType.SAVINGS);
+        account.setCreatedAt(LocalDateTime.now());
+
+        Account savedAccount = accountRepository.save(account);
+
+        User user = new User();
+        user.setFirstName("ijidola");
+        user.setLastName("Doe");
+        user.setEmail("john@example.com");
+        user.setPin("1234");
+        user.setAccountIds(List.of(savedAccount.getId()));
+        User savedUser = userRepository.save(user);
+
+        accountService.withdraw(savedUser.getUserId(), 2000, "1234");
+
+        Account updated = accountRepository.findById(savedAccount.getId()).orElseThrow();
+        assertEquals(3000.00, updated.getBalance());
+    }
+
+
+
+    @Test
+    public void testToDeposit(){
+        Account account = new Account();
+        account.setAccountNumber("0712345688");
+        account.setBalance(5000.00);
+        account.setAccountType(AccountType.SAVINGS);
+        account.setCreatedAt(LocalDateTime.now());
+        Account savedAccount =  accountRepository.save(account);
+
+        User user = new User();
+        user.setFirstName("ijidola");
+        user.setLastName("Micheal");
+        user.setMiddleName("sam");
+        user.setPassword("123456");
+        user.setPin("1234");
+        user.setEmail("okakaFavour81@gmail.com");
+        user.setAccountIds(List.of(savedAccount.getId()));
+        User savedUser = userRepository.save(user);
+
+        accountService.deposit(savedUser.getUserId(), 2000, "1234");
+        Account updated = accountRepository.findById(account.getId()).orElseThrow();
+        assertEquals(7000.00, updated.getBalance());
+    }
+
+    @Test
+    public void testToViewTheListOfTransactions(){
+        Account account = new Account();
+        account.setAccountNumber("0712345688");
+        account.setBalance(5000.00);
+        account.setAccountType(AccountType.SAVINGS);
+        account.setCreatedAt(LocalDateTime.now());
+        Account savedAccount =  accountRepository.save(account);
+
+        User user = new User();
+        user.setFirstName("ijidola");
+        user.setLastName("Micheal");
+        user.setMiddleName("sam");
+        user.setPassword("123456");
+        user.setPin("1234");
+        user.setEmail("okakaFavour81@gmail.com");
+        user.setAccountIds(List.of(savedAccount.getId()));
+        User savedUser = userRepository.save(user);
+
+        accountService.deposit(savedUser.getUserId(), 2000, "1234");
+        Account updated = accountRepository.findById(account.getId()).orElseThrow();
+        assertEquals(7000.00, updated.getBalance());
+
+
+        accountService.withdraw(user.getUserId(), 2000, "1234");
+        Account newUpdate = accountRepository.findById(account.getId()).orElseThrow();
+        assertEquals(5000.00, newUpdate.getBalance());
+
+    }
+
 }
