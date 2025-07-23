@@ -19,5 +19,6 @@ public class Transactions {
     private String recipientAccount;
     private String description;
     private String receiverAccount;
+    private LocalDateTime date;
 
 }

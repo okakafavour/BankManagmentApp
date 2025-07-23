@@ -38,15 +38,14 @@ public class UserMapper {
         Account account = createAccount(registerRequest);
 
         Account savedAccount = accountRepository.save(account);
-
         user.setAccountIds(List.of(savedAccount.getId()));
 
         generateVerificationToken(user);
-        userRepository.save(user);
-
-        sendVerificationEmail(user);
-        return user;
+        User savedUser = userRepository.save(user);
+        sendVerificationEmail(savedUser);
+        return savedUser;
     }
+
 
 
     public RegisterResponse mapToRegisterResponse(User user) {
@@ -69,7 +68,6 @@ public class UserMapper {
     }
 
     public Account createAccount(RegisterRequest registerRequest) {
-
         AccountType accountType;
         try {
             String type = registerRequest.getAccountType().name();
@@ -79,12 +77,18 @@ public class UserMapper {
         }
 
         Account account = new Account();
-        account.setAccountNumber(accountService.generateAccountNumber());
+        String accountNumber = accountService.generateAccountNumber();
+        if (accountNumber == null) {
+            throw new IllegalStateException("Generated account number is null!");
+        }
+
+        account.setAccountNumber(accountNumber);
         account.setAccountType(accountType);
         account.setCreatedAt(LocalDateTime.now());
         account.setBalance(0.0);
         return account;
     }
+
 
 
     public void generateVerificationToken(User user) {

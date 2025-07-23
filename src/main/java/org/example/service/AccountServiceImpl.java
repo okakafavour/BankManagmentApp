@@ -2,21 +2,26 @@ package org.example.service;
 
 import org.example.data.model.Account;
 import org.example.data.model.Transactions;
-import org.example.data.model.TransferResult;
 import org.example.data.model.User;
 import org.example.data.repository.AccountRepository;
 import org.example.data.repository.TransactionsRepository;
 import org.example.data.repository.UserRepository;
 import org.example.dto.request.TransferRequest;
 import org.example.dto.response.TransferResponse;
+import org.example.enums.Direction;
+import org.example.enums.TransactionType;
 import org.example.exception.*;
 import org.example.util.AccountMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Service
 public class AccountServiceImpl implements AccountService{
@@ -61,6 +66,15 @@ public class AccountServiceImpl implements AccountService{
         accountRepository.save(sender);
         accountRepository.save(receiver);
 
+        Transactions transaction = new Transactions();
+        transaction.setTransactionType(TransactionType.TRANSFER);
+        transaction.setAmount(request.getAmount());
+        transaction.setSenderAccount(request.getSenderAccountNumber());
+        transaction.setRecipientAccount(request.getReceiverAccountNumber());
+        transaction.setDate(LocalDateTime.now());
+        transactionsRepository.save(transaction);
+
+
         return accountMapper.mapToTransferResponse(sender, receiver, request.getAmount());
     }
 
@@ -84,6 +98,14 @@ public class AccountServiceImpl implements AccountService{
 
         account.setBalance(account.getBalance() - amount);
         accountRepository.save(account);
+
+        Transactions transactions = new Transactions();
+        transactions.setTransactionType(TransactionType.WITHDRAW);
+        transactions.setAmount(amount);
+        transactions.setSenderAccount(account.getAccountNumber());
+        transactions.setRecipientAccount(null);
+        transactions.setDate(LocalDateTime.now());
+        transactionsRepository.save(transactions);
     }
 
     @Override
@@ -100,6 +122,14 @@ public class AccountServiceImpl implements AccountService{
 
         account.setBalance(account.getBalance() + amount);
         accountRepository.save(account);
+
+        Transactions transactions = new Transactions();
+        transactions.setTransactionType(TransactionType.DEPOSIT);
+        transactions.setAmount(amount);
+        transactions.setSenderAccount(null);
+        transactions.setReceiverAccount(account.getAccountNumber());
+        transactions.setDate(LocalDateTime.now());
+        transactionsRepository.save(transactions);
     }
 
     @Override
@@ -113,22 +143,71 @@ public class AccountServiceImpl implements AccountService{
 
         String accountNumber = account.getAccountNumber();
 
-        List<Transactions> transactions = transactionsRepository.findBySenderAccountOrRecipientAccountOrReceiverAccount(accountNumber, accountNumber, accountNumber);
+        List<Transactions> transactions = transactionsRepository
+                .findBySenderAccountOrRecipientAccountOrReceiverAccount(accountNumber, accountNumber, accountNumber);
+
         return transactions.stream()
-                .sort
+                .sorted(Comparator.comparing(Transactions::getDate))
+                .map(transaction -> {
+                    String direction;
+                    String narration = "";
+
+                    if (transaction.getSenderAccount() != null && transaction.getSenderAccount().equals(accountNumber)) {
+                        direction = "SENT";
+
+                        if (transaction.getRecipientAccount() != null) {
+                            String recipientName = findUserNameByAccountNumber(transaction.getRecipientAccount());
+                            narration = "Transfer to " + recipientName;
+                        } else {
+                            narration = "Withdrawal";
+                        }
+
+                    } else if (transaction.getRecipientAccount() != null && transaction.getRecipientAccount().equals(accountNumber)) {
+                        direction = "RECEIVED";
+
+                        if (transaction.getSenderAccount() != null) {
+                            String senderName = findUserNameByAccountNumber(transaction.getSenderAccount());
+                            narration = "Transfer from " + senderName;
+                        } else {
+                            narration = "Deposit";
+                        }
+
+                    } else {
+                        direction = "SELF";
+                        narration = "Self transaction";
+                    }
+
+                    return new TransactionsSummary(
+                            transaction.getTransactionType(),
+                            transaction.getAmount(),
+                            Direction.valueOf(direction),
+                            transaction.getDate(),
+                            narration
+                    );
+                })
+                .collect(Collectors.toList());
     }
 
-    public List<Transactions> viewTransactions(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        String accountId = user.getAccountIds().get(0);
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+    private String findUserNameByAccountNumber(String accountNumber) {
+        Optional<Account> OptAccount = accountRepository.findByAccountNumber(accountNumber);
+        if(OptAccount.isEmpty()) return "Unknown";
 
-        String accountNumber = account.getAccountNumber();
-        return transactionsRepository.findBySenderAccountOrRecipientAccountOrReceiverAccount(accountNumber, accountNumber, accountNumber);
+        String accountId = OptAccount.get().getId();
+
+        Optional<User> OptUser = userRepository.findAll().stream()
+                .filter(user -> user.getAccountIds().contains(accountId))
+                .findFirst();
+
+        if(OptUser.isPresent()) {
+            User user = OptUser.get();
+            return user.getFirstName() + " " + user.getLastName();
+        } else {
+            return "Unknown";
+        }
+
+
+
     }
-
 
 }
