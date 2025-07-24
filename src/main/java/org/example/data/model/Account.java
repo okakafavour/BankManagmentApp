@@ -20,5 +20,7 @@ public class Account {
     private AccountType accountType;
     private double balance;
     private List<Transactions> transactionsList;
+    private String pin;
     private LocalDateTime createdAt;
+
 }

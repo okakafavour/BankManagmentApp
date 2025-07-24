@@ -30,6 +30,9 @@ public class AccountServiceImplTest {
     AccountServiceImpl accountService;
 
     @Autowired
+    BankServiceImpl bankService;
+
+    @Autowired
     UserRepository userRepository;
 
     @Autowired
@@ -43,50 +46,25 @@ public class AccountServiceImplTest {
     }
 
     @Test
-    void testTransferSuccess() {
+    public void testToDeposit() {
+        Account account = new Account();
+        account.setAccountNumber("0712345688");
+        account.setBalance(5000.00);
+        account.setAccountType(AccountType.SAVINGS);
+        account.setCreatedAt(LocalDateTime.now());
+        Account savedAccount = accountRepository.save(account);
 
-        Account sender = new Account();
-        sender.setAccountNumber("0712345678");
-        sender.setBalance(5000.0);
-        sender.setAccountType(AccountType.SAVINGS);
-        sender.setCreatedAt(LocalDateTime.now());
+        User user = new User();
+        user.setFirstName("ijidola");
+        user.setLastName("Doe");
+        user.setEmail("john@example.com");
+        user.setPin("1234");
+        user.setAccountIds(List.of(savedAccount.getId()));
+        User savedUser = userRepository.save(user);
+        accout
 
-        Account receiver = new Account();
-        receiver.setAccountNumber("0800000000");
-        receiver.setBalance(2000.0);
-        receiver.setAccountType(AccountType.SAVINGS);
-        receiver.setCreatedAt(LocalDateTime.now());
-
-        accountRepository.save(sender);
-        accountRepository.save(receiver);
-
-        System.out.println("=== ACCOUNTS BEFORE TRANSFER ===");
-        List<Account> allBefore = accountRepository.findAll();
-        allBefore.forEach(acc -> System.out.println(acc.getAccountNumber() + ": " + acc.getBalance()));
-
-
-        TransferRequest request = new TransferRequest();
-        request.setSenderAccountNumber(sender.getAccountNumber());
-        request.setReceiverAccountNumber(receiver.getAccountNumber());
-        request.setAmount(1000.0);
-
-        TransferResponse response = accountService.transfer(request);
-
-        assertEquals("Transfer successful", response.getMessage());
-        assertEquals(sender.getAccountNumber(), response.getSenderAccountNumber());
-        assertEquals(receiver.getAccountNumber(), response.getReceiverAccountNumber());
-        assertEquals(1000.0, response.getAmountTransferred());
-
-        System.out.println("=== ACCOUNTS AFTER TRANSFER ===");
-        List<Account> allAfter = accountRepository.findAll();
-        allAfter.forEach(acc -> System.out.println(acc.getAccountNumber() + ": " + acc.getBalance()));
-
-        Account updatedSender = accountRepository.findByAccountNumber(sender.getAccountNumber()).orElseThrow();
-        Account updatedReceiver = accountRepository.findByAccountNumber(receiver.getAccountNumber()).orElseThrow();
-
-        assertEquals(4000.0, updatedSender.getBalance());
-        assertEquals(3000.0, updatedReceiver.getBalance());
     }
+
 
     @Test
     public void testToWithdraw() {
@@ -162,7 +140,7 @@ public class AccountServiceImplTest {
     request.setReceiverAccountNumber(account2.getAccountNumber());
     request.setAmount(1000.0);
 
-    accountService.transfer(request);
+    bankService.transfer(request);
     accountService.deposit(savedUser.getUserId(), 2000, "1234");
     accountService.withdraw(savedUser.getUserId(), 2000, "1234");
 

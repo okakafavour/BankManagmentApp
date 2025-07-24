@@ -1,17 +1,20 @@
 package org.example.service;
 
-import org.example.dto.request.TransferRequest;
-import org.example.dto.response.TransferResponse;
-import org.springframework.stereotype.Service;
+import org.example.dto.request.DepositRequest;
+import org.example.dto.request.WithdrawalRequest;
+import org.example.dto.response.DepositResponse;
+import org.example.dto.response.WithdrawalResponse;
+import org.example.dto.response.AccountBalanceResponse;
 
-import java.math.BigDecimal;
 import java.util.List;
 
-@Service
 public interface AccountService {
-    String generateAccountNumber();
-    TransferResponse transfer(TransferRequest transferRequest);
-    void withdraw(String userId, double amount, String pin);
+
     void deposit(String userId, double amount, String pin);
+
+    void withdraw(String userId, double amount, String pin);
+
+    AccountBalanceResponse getAccountBalance(String userId);
+
     List<TransactionsSummary> viewTransactionHistory(String userId);
 }

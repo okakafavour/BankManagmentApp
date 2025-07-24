@@ -7,6 +7,7 @@ import org.example.data.repository.AccountRepository;
 import org.example.data.repository.TransactionsRepository;
 import org.example.data.repository.UserRepository;
 import org.example.dto.request.TransferRequest;
+import org.example.dto.response.AccountBalanceResponse;
 import org.example.dto.response.TransferResponse;
 import org.example.enums.Direction;
 import org.example.enums.TransactionType;
@@ -38,45 +39,6 @@ public class AccountServiceImpl implements AccountService{
     @Autowired
     private TransactionsRepository transactionsRepository;
 
-    @Override
-    public String generateAccountNumber() {
-        String accountNumber;
-        do {
-            int randomNum = (int) (Math.random() * 100000000);
-            accountNumber = String.format("07%08d", randomNum);
-        } while (accountRepository.existsByAccountNumber(accountNumber));
-        return accountNumber;
-    }
-
-    @Override
-    public TransferResponse transfer(TransferRequest request) {
-        Account sender = accountRepository.findByAccountNumber(request.getSenderAccountNumber())
-                .orElseThrow(() -> new RuntimeException("Sender account not found with account number: " + request.getSenderAccountNumber()));
-
-        Account receiver = accountRepository.findByAccountNumber(request.getReceiverAccountNumber())
-                .orElseThrow(() -> new RuntimeException("Receiver account not found with account number: " + request.getReceiverAccountNumber()));
-
-        if (sender.getBalance() < request.getAmount()) {
-            throw new RuntimeException("Insufficient balance. Sender has: " + sender.getBalance() + ", required: " + request.getAmount());
-        }
-
-        sender.setBalance(sender.getBalance() - request.getAmount());
-        receiver.setBalance(receiver.getBalance() + request.getAmount());
-
-        accountRepository.save(sender);
-        accountRepository.save(receiver);
-
-        Transactions transaction = new Transactions();
-        transaction.setTransactionType(TransactionType.TRANSFER);
-        transaction.setAmount(request.getAmount());
-        transaction.setSenderAccount(request.getSenderAccountNumber());
-        transaction.setRecipientAccount(request.getReceiverAccountNumber());
-        transaction.setDate(LocalDateTime.now());
-        transactionsRepository.save(transaction);
-
-
-        return accountMapper.mapToTransferResponse(sender, receiver, request.getAmount());
-    }
 
     @Override
     public void withdraw(String userId, double amount, String pin) {
@@ -106,6 +68,21 @@ public class AccountServiceImpl implements AccountService{
         transactions.setRecipientAccount(null);
         transactions.setDate(LocalDateTime.now());
         transactionsRepository.save(transactions);
+    }
+
+    @Override
+    public AccountBalanceResponse getAccountBalance(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Account account = accountRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+
+        AccountBalanceResponse response = new AccountBalanceResponse();
+        response.setAccountNumber(account.getAccountNumber());
+        response.setAccountType(account.getAccountType());
+        response.setBalance(account.getBalance());
+        return response;
     }
 
     @Override
@@ -205,9 +182,8 @@ public class AccountServiceImpl implements AccountService{
         } else {
             return "Unknown";
         }
-
-
-
     }
+
+
 
 }

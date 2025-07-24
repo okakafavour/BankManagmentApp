@@ -9,8 +9,10 @@ import org.example.dto.response.RegisterResponse;
 import org.example.enums.AccountType;
 import org.example.exception.UserAlreadyExist;
 import org.example.service.AccountServiceImpl;
+import org.example.service.BankServiceImpl;
 import org.example.service.EmailServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,25 +27,35 @@ public class UserMapper {
     UserRepository userRepository;
 
     @Autowired
-    AccountServiceImpl accountService;
+    BankServiceImpl bankService;
 
     @Autowired
     EmailServiceImpl  emailService;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @Autowired
     AccountRepository accountRepository;
 
     public User mapToRegisterRequest(RegisterRequest registerRequest) {
         User user = createUser(registerRequest);
-        Account account = createAccount(registerRequest);
-
-        Account savedAccount = accountRepository.save(account);
-        user.setAccountIds(List.of(savedAccount.getId()));
-
-        generateVerificationToken(user);
         User savedUser = userRepository.save(user);
-        sendVerificationEmail(savedUser);
-        return savedUser;
+
+        Account account = bankService.createAccount(
+                savedUser.getUserId(),
+                registerRequest.getAccountType(),
+                registerRequest.getPin()
+        );
+
+        savedUser.setAccountIds(List.of(account.getId()));
+
+        generateVerificationToken(savedUser);
+        User updatedUser = userRepository.save(savedUser);
+
+        sendVerificationEmail(updatedUser);
+
+        return updatedUser;
     }
 
 
@@ -64,32 +76,11 @@ public class UserMapper {
         user.setEmail(registerRequest.getEmail());
         user.setPassword(PasswordHashingMapper.hashPassword(registerRequest.getPassword()));
         user.setVerified(false);
+        user.setPin(registerRequest.getPin());
+        user.setTokenExpiryDate(registerRequest.getTokenExpiryDate());
+        user.setVerificationToken(UUID.randomUUID().toString());
         return user;
     }
-
-    public Account createAccount(RegisterRequest registerRequest) {
-        AccountType accountType;
-        try {
-            String type = registerRequest.getAccountType().name();
-            accountType = AccountType.valueOf(type.trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid account type. Valid types: SAVINGS, CURRENT.");
-        }
-
-        Account account = new Account();
-        String accountNumber = accountService.generateAccountNumber();
-        if (accountNumber == null) {
-            throw new IllegalStateException("Generated account number is null!");
-        }
-
-        account.setAccountNumber(accountNumber);
-        account.setAccountType(accountType);
-        account.setCreatedAt(LocalDateTime.now());
-        account.setBalance(0.0);
-        return account;
-    }
-
-
 
     public void generateVerificationToken(User user) {
         String token = UUID.randomUUID().toString();

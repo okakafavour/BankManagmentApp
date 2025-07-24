@@ -12,7 +12,6 @@ public class TransferResponse {
     private String message;
     private LocalDateTime timestamp;
     private double balance;
-    private double amount;
     private String status;
 
 }

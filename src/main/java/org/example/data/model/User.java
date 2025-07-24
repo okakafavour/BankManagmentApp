@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@Document("Bank User")
+@Document("User")
 public class User {
 
     @Id
