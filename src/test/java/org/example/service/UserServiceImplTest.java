@@ -35,6 +35,7 @@
             registerRequest.setFirstName("firstName");
             registerRequest.setLastName("lastName");
             registerRequest.setMiddleName("middleName");
+            registerRequest.setPin("1234");
             registerRequest.setPhoneNumber("09137217467");
             registerRequest.setEmail("okakafavour81@gmail.com");
             registerRequest.setPassword("123456");
@@ -64,6 +65,7 @@
             registerRequest.setFirstName("firstName");
             registerRequest.setLastName("LastName");
             registerRequest.setMiddleName("MiddleName");
+            registerRequest.setPin("1234");
             registerRequest.setEmail("okakafavour81@gmail.com");
             registerRequest.setPhoneNumber("07015705372");
             registerRequest.setPassword("123456");

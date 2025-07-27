@@ -54,7 +54,6 @@ public class UserMapper {
         User updatedUser = userRepository.save(savedUser);
 
         sendVerificationEmail(updatedUser);
-
         return updatedUser;
     }
 
@@ -76,7 +75,6 @@ public class UserMapper {
         user.setEmail(registerRequest.getEmail());
         user.setPassword(PasswordHashingMapper.hashPassword(registerRequest.getPassword()));
         user.setVerified(false);
-        user.setPin(registerRequest.getPin());
         user.setTokenExpiryDate(registerRequest.getTokenExpiryDate());
         user.setVerificationToken(UUID.randomUUID().toString());
         return user;

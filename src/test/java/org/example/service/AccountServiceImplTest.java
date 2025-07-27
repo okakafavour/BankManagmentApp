@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
@@ -51,6 +52,7 @@ public class AccountServiceImplTest {
         account.setAccountNumber("0712345688");
         account.setBalance(5000.00);
         account.setAccountType(AccountType.SAVINGS);
+        account.setPin("2299");
         account.setCreatedAt(LocalDateTime.now());
         Account savedAccount = accountRepository.save(account);
 
@@ -58,20 +60,21 @@ public class AccountServiceImplTest {
         user.setFirstName("ijidola");
         user.setLastName("Doe");
         user.setEmail("john@example.com");
-        user.setPin("1234");
         user.setAccountIds(List.of(savedAccount.getId()));
         User savedUser = userRepository.save(user);
-        accout
+
 
     }
 
 
     @Test
     public void testToWithdraw() {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         Account account = new Account();
         account.setAccountNumber("0712345688");
         account.setBalance(5000.00);
         account.setAccountType(AccountType.SAVINGS);
+        account.setPin(passwordEncoder.encode("1234"));
         account.setCreatedAt(LocalDateTime.now());
         Account savedAccount = accountRepository.save(account);
 
@@ -79,22 +82,22 @@ public class AccountServiceImplTest {
         user.setFirstName("ijidola");
         user.setLastName("Doe");
         user.setEmail("john@example.com");
-        user.setPin("1234");
         user.setAccountIds(List.of(savedAccount.getId()));
         User savedUser = userRepository.save(user);
 
         accountService.withdraw(savedUser.getUserId(), 2000, "1234");
-
         Account updated = accountRepository.findById(savedAccount.getId()).orElseThrow();
         assertEquals(3000.00, updated.getBalance());
     }
 
     @Test
     public void testToViewTheListOfTransactions() {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         System.out.println("👉 Creating first account (SAVINGS)");
         Account account = new Account();
         account.setAccountNumber("0712345688");
         account.setBalance(5000.00);
+        account.setPin(passwordEncoder.encode("1234"));
         account.setAccountType(AccountType.SAVINGS);
         account.setCreatedAt(LocalDateTime.now());
         Account savedAccount = accountRepository.save(account);
@@ -106,7 +109,6 @@ public class AccountServiceImplTest {
         user.setLastName("Micheal");
         user.setMiddleName("sam");
         user.setPassword("123456");
-        user.setPin("1234");
         user.setEmail("okakaFavour81@gmail.com");
         user.setAccountIds(List.of(savedAccount.getId()));
         User savedUser = userRepository.save(user);
@@ -116,6 +118,7 @@ public class AccountServiceImplTest {
         Account account2 = new Account();
         account2.setAccountNumber("0711100045");
         account2.setBalance(3000.00);
+        account2.setPin(passwordEncoder.encode("2255"));
         account2.setAccountType(AccountType.CURRENT);
         account2.setCreatedAt(LocalDateTime.now());
         Account savedAccount2 = accountRepository.save(account2);
@@ -127,7 +130,6 @@ public class AccountServiceImplTest {
         user2.setLastName("Doe");
         user2.setMiddleName("sam");
         user2.setPassword("12345");
-        user2.setPin("2255");
         user2.setEmail("johndoe12@gmail.com");
         user2.setAccountIds(List.of(savedAccount2.getId()));
         User secondUser = userRepository.save(user2);

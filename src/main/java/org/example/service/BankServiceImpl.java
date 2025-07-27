@@ -9,7 +9,9 @@ import org.example.dto.response.TransferResponse;
 import org.example.enums.AccountType;
 import org.example.enums.TransactionType;
 import org.example.exception.AccountNotFoundException;
+import org.example.exception.InvalidPinException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,6 +25,8 @@ public class BankServiceImpl implements BankService {
     @Autowired
     TransactionsRepository transactionsRepository;
 
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     private String generateAccountNumber() {
         String accountNumber;
@@ -39,7 +43,7 @@ public class BankServiceImpl implements BankService {
         account.setAccountNumber(generateAccountNumber());
         account.setAccountType(accountType);
         account.setId(userId);
-        account.setPin(pin);
+        account.setPin(passwordEncoder.encode(pin));
         return accountRepository.save(account);
     }
 
@@ -61,6 +65,10 @@ public class BankServiceImpl implements BankService {
 
         Account receiver = accountRepository.findByAccountNumber(request.getReceiverAccountNumber())
                 .orElseThrow(() -> new RuntimeException("Receiver account not found with account number: " + request.getReceiverAccountNumber()));
+
+        if (!passwordEncoder.matches(request.getTransferPin(), sender.getPin())) {
+            throw new InvalidPinException("Incorrect PIN");
+        }
 
         if (sender.getBalance() < request.getAmount()) {
             throw new RuntimeException("Insufficient balance. Sender has: " + sender.getBalance() + ", required: " + request.getAmount());
@@ -87,6 +95,8 @@ public class BankServiceImpl implements BankService {
         transferResponse.setTimestamp(LocalDateTime.now());
         transferResponse.setBalance(sender.getBalance());
         transferResponse.setMessage("Transfer Successful");
+
         return transferResponse;
     }
+
 }

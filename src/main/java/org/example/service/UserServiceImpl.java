@@ -80,7 +80,6 @@ public class UserServiceImpl implements UserService {
         request.setEmail(validateEmail(request.getEmail()));
         request.setPassword(PasswordHashingMapper.hashPassword(request.getPassword()));
         request.setPhoneNumber(validatePhoneNumber(request.getPhoneNumber()));
-        request.setPin(validateTransferPin(request.getPin()));
     }
 }
 
