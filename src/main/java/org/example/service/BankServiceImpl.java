@@ -2,19 +2,25 @@ package org.example.service;
 
 import org.example.data.model.Account;
 import org.example.data.model.Transactions;
+import org.example.data.model.User;
 import org.example.data.repository.AccountRepository;
 import org.example.data.repository.TransactionsRepository;
+import org.example.data.repository.UserRepository;
+import org.example.dto.request.AccountCreationRequest;
 import org.example.dto.request.TransferRequest;
+import org.example.dto.response.AccountCreationResponse;
 import org.example.dto.response.TransferResponse;
 import org.example.enums.AccountType;
 import org.example.enums.TransactionType;
 import org.example.exception.AccountNotFoundException;
 import org.example.exception.InvalidPinException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 @Service
 public class BankServiceImpl implements BankService {
@@ -24,6 +30,9 @@ public class BankServiceImpl implements BankService {
 
     @Autowired
     TransactionsRepository transactionsRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
@@ -38,13 +47,26 @@ public class BankServiceImpl implements BankService {
     }
 
     @Override
-    public Account createAccount(String userId, AccountType accountType, String pin) {
+    public AccountCreationResponse createAccount(AccountCreationRequest request) {
+        if (request.getPin() == null ||request.getPin().length() < 4) throw new InvalidPinException("Pin must be atleast 4 characters");
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+
         Account account = new Account();
         account.setAccountNumber(generateAccountNumber());
-        account.setAccountType(accountType);
-        account.setId(userId);
-        account.setPin(passwordEncoder.encode(pin));
-        return accountRepository.save(account);
+        account.setAccountType(request.getAccountType());
+        account.setUserId(user.getUserId());
+        account.setPin(passwordEncoder.encode(request.getPin())); // ✅ You missed this
+        account.setBalance(0.0);
+        account.setCreatedAt(LocalDateTime.now());
+        account.setTransactionsList(new ArrayList<>()); // ✅ Optional
+
+        accountRepository.save(account);
+         AccountCreationResponse response = new AccountCreationResponse();
+         response.setAccountId(account.getId());
+         response.setMessage("Account created");
+         return response;
     }
 
     @Override

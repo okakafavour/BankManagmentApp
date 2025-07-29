@@ -21,15 +21,9 @@ public class User {
     private String email;
     private String password;
     private String phoneNumber;
-
-    // ✅ Store account IDs instead of full objects
     private List<String> accountIds;
-
     private AccountType accountType;
     private boolean isVerified = false;
     private String verificationToken;
     private LocalDateTime tokenExpiryDate;
-    private String pin;
-
-
 }

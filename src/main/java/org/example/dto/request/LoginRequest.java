@@ -1,6 +1,9 @@
 package org.example.dto.request;
 
-import org.example.data.model.User;
+import lombok.Data;
 
-public class LoginRequest extends User {
+@Data
+public class LoginRequest {
+    private String email;
+    private String password;
 }

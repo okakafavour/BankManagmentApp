@@ -1,7 +1,9 @@
 package org.example.service;
 
 import org.example.data.model.Account;
+import org.example.dto.request.AccountCreationRequest;
 import org.example.dto.request.TransferRequest;
+import org.example.dto.response.AccountCreationResponse;
 import org.example.dto.response.TransferResponse;
 import org.example.enums.AccountType;
 
@@ -9,7 +11,7 @@ import java.util.List;
 
 public interface BankService {
 
-    Account createAccount(String userId, AccountType accountType, String pin);
+    AccountCreationResponse createAccount(AccountCreationRequest request);
 
     List<Account> getAllAccounts();
 

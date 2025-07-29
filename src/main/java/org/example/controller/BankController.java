@@ -1,9 +1,10 @@
 package org.example.controller;
 
 import org.example.data.model.Account;
+import org.example.dto.request.AccountCreationRequest;
 import org.example.dto.request.TransferRequest;
+import org.example.dto.response.AccountCreationResponse;
 import org.example.dto.response.TransferResponse;
-import org.example.enums.AccountType;
 import org.example.service.BankService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,13 +22,13 @@ public class BankController {
     }
 
     @PostMapping("/create-account")
-    public ResponseEntity<Account> createAccount(@RequestParam String userId, @RequestParam AccountType accountType, @RequestParam String pin) {
-         Account account = bankService.createAccount(userId, accountType, pin);
+    public ResponseEntity<AccountCreationResponse> createAccount(@RequestBody AccountCreationRequest request) {
+         AccountCreationResponse account = bankService.createAccount(request);
          return ResponseEntity.ok(account);
     }
 
     @GetMapping("/all-accounts")
-    public ResponseEntity<Account> getAccount(@RequestParam String userId) {
+    public ResponseEntity<Account> getAccounts(@RequestParam String userId) {
         List<Account> allAccounts = bankService.getAllAccounts();
         return ResponseEntity.ok(allAccounts.get(0));
     }

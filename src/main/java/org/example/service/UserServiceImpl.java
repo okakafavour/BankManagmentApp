@@ -46,17 +46,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
 
-        if (!userRepository.existsByEmail(loginRequest.getEmail())) throw new UserAlreadyExist("Email already exist");
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new UserAlreadyExist("Email not found"));
 
-        boolean passwordMatch = PasswordHashingMapper.checkPassword(loginRequest.getPassword(), PasswordHashingMapper.hashPassword(loginRequest.getPassword()));
-        if (!passwordMatch) throw new UserAlreadyExist("Invalid password");
+        boolean passwordMatch = PasswordHashingMapper.checkPassword(
+                loginRequest.getPassword(),
+                user.getPassword());
 
         String token = jwtUtil.generateToken(loginRequest.getEmail());
 
         LoginResponse response = new LoginResponse();
         response.setToken(token);
         response.setMessage("Login Successfully");
-        response.setUserId(loginRequest.getUserId());
+        response.setUserId(user.getUserId());
         return response;
     }
 
@@ -78,8 +80,14 @@ public class UserServiceImpl implements UserService {
         request.setLastName(validateName(request.getLastName()));
         request.setMiddleName(validateName(request.getMiddleName()));
         request.setEmail(validateEmail(request.getEmail()));
-        request.setPassword(PasswordHashingMapper.hashPassword(request.getPassword()));
+
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new IllegalArgumentException("Password cannot be null or blank");
+        }
+
         request.setPhoneNumber(validatePhoneNumber(request.getPhoneNumber()));
     }
+
+
 }
 

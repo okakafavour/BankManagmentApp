@@ -27,28 +27,12 @@ public class UserMapper {
     UserRepository userRepository;
 
     @Autowired
-    BankServiceImpl bankService;
-
-    @Autowired
     EmailServiceImpl  emailService;
 
-    @Autowired
-    PasswordEncoder passwordEncoder;
-
-    @Autowired
-    AccountRepository accountRepository;
 
     public User mapToRegisterRequest(RegisterRequest registerRequest) {
         User user = createUser(registerRequest);
         User savedUser = userRepository.save(user);
-
-        Account account = bankService.createAccount(
-                savedUser.getUserId(),
-                registerRequest.getAccountType(),
-                registerRequest.getPin()
-        );
-
-        savedUser.setAccountIds(List.of(account.getId()));
 
         generateVerificationToken(savedUser);
         User updatedUser = userRepository.save(savedUser);
@@ -68,6 +52,7 @@ public class UserMapper {
 
 
     public User createUser(RegisterRequest registerRequest) {
+        System.out.println("Incoming raw password: " + registerRequest.getPassword());
         User user = new User();
         user.setFirstName(registerRequest.getFirstName());
         user.setLastName(registerRequest.getLastName());
